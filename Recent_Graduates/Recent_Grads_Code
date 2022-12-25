@@ -1,0 +1,94 @@
+select * from recent_grads
+
+Alter Table Recent_Grads
+Drop Column Total
+
+-- 'Total' column was dropped because the numbers didn't match the total number for the 'Men' and 'Women' columns
+ 
+sp_rename 'Recent_Grads.Rank', 'Ranking', 'COLUMN'
+
+-- Looking at how many total people are in each Engineering major 
+
+select ranking, major, major_category, (men+women) as totals, employed, unemployed, unemployment_rate from recent_grads
+where major_category like 'engineering'
+order by 1
+
+-- Seeing the rate of employed people from each major
+
+select major, major_category, (employed/(men+women)) as employed_rate 
+from recent_grads
+order by 3 desc 
+
+-- Alternate version of the last query 
+
+select major, major_category, max(employed/(men+women)) as employed_rate 
+from recent_grads
+group by major, Major_category
+order by 3 desc 
+
+-- Showing which major have least unemployed to the most 
+
+select major, major_category, MAX(cast(unemployed as int)) as TotalUnemployed
+from recent_grads
+Where major is not null 
+group by major, major_category 
+order by TotalUnemployed asc
+
+-- Comparing the total amount of full-time employees to part-time 
+
+Select sum(full_time) as TotalFullTime, sum(part_time) as TotalPartTime
+from recent_grads
+
+-- Seeing which majors have the most and least full-time and part-time employees
+
+Select major, full_time, part_time 
+from recent_grads 
+order by 2,3 asc
+
+Select major, full_time, part_time 
+from recent_grads 
+order by 2,3 desc 
+
+-- Finding the percentage of full-time employees 
+
+UPDATE recent_grads
+SET Employed = NULL 
+WHERE Employed = '0'
+
+Select employed, full_time, (full_time/employed)*100 as FullTimePercentage 
+from recent_grads
+where employed is not null 
+order by FullTimePercentage desc 
+
+-- Finding the percentage of part-time employees 
+
+Select employed, part_time, (part_time/employed)*100 as PartTimePercentage 
+from recent_grads
+where employed is not null 
+order by PartTimePercentage desc
+
+-- Comparing the percentage of men from each major to total amount 
+
+Select major, (men+women) as TotalStudents, men, (men/(men+women))*100 as Percentage_of_Men
+from recent_grads
+order by Percentage_of_Men desc 
+
+-- Comparing the percentage of women from each major to total amount 
+
+Select major, (men+women) as TotalStudents, women, (women/(men+women))*100 as Percentage_of_Women
+from recent_grads
+order by Percentage_of_Women desc 
+
+-- Determining the percentage of people with low wage jobs 
+
+Select employed, low_wage_jobs, MAX(low_wage_jobs/employed)*100 as LowWagePercentage 
+from recent_grads
+group by Employed, Low_wage_jobs
+order by LowWagePercentage desc 
+
+-- Determining which majors have the largest percentage of low wage workers 
+
+Select major, MAX(low_wage_jobs/employed)*100 as LowWagePercentage 
+from recent_grads
+group by major
+order by LowWagePercentage desc 
